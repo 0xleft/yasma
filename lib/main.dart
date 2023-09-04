@@ -9,6 +9,7 @@ void main() {
       create: (context) => QuizTheme(
         themeName: 'Random',
         primaryColor: Colors.blue,
+        icon: const Icon(Icons.help),
       ),
       child: const MyApp(),
     ),

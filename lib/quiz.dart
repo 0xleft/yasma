@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yasma/data/Phase.dart';
@@ -18,8 +16,12 @@ class Quiz extends StatefulWidget {
 class _QuizState extends State<Quiz> {
   Question? question;
   int phase = Phase.loading;
+  bool loading = true;
 
   Future<void> fetchData() async {
+    setState(() {
+      loading = true;
+    });
     print(Provider.of<QuizTheme>(context, listen: false).themeName);
     final response = await http.get(Uri.parse(
         'https://pageup.lt/api/ai/generate_quiz_themed?theme=${Provider.of<QuizTheme>(context, listen: false).themeName}'));
@@ -28,6 +30,7 @@ class _QuizState extends State<Quiz> {
       setState(() {
         question = Question.fromJson(response.body);
         phase = Phase.showingQuestion;
+        loading = false;
       });
     } else {
       throw Exception('Failed to load data from the API');
@@ -58,7 +61,7 @@ class _QuizState extends State<Quiz> {
 
     // to refresh for new theme
     quizTheme.addListener(() {
-      if (phase == Phase.loading) {
+      if (loading) {
         return;
       }
       fetchData();
@@ -82,44 +85,48 @@ class _QuizState extends State<Quiz> {
         ],
       ),
       body: Center(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                (phase == Phase.loading)
-                    ? 'Loading...'
-                    : question?.question ?? "Question could not be loaded",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 24,
-                ),
-              ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // loading indicator
+            if (loading)
               Container(
-                margin: const EdgeInsets.only(top: 20),
-                child: (phase == Phase.loading)
-                    ? null
-                    : Column(
-                        children: [
-                          for (int i = 0; i < question!.answers.length; i++)
-                            ElevatedButton(
-                              onPressed: () {
-                                answerQuestion(i);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: (phase == Phase.showingAnswer)
-                                    ? (i == question!.correctAnswer)
-                                        ? Colors.green
-                                        : Colors.red
-                                    : null,
-                              ),
-                              child: Text(question!.answers[i]),
+                margin: const EdgeInsets.only(bottom: 40),
+                child: const CircularProgressIndicator(),
+              ),
+            Text(
+              (phase == Phase.loading)
+                  ? 'Loading...'
+                  : question?.question ?? "Question could not be loaded",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(top: 20),
+              child: (phase == Phase.loading)
+                  ? null
+                  : Column(
+                      children: [
+                        for (int i = 0; i < question!.answers.length; i++)
+                          ElevatedButton(
+                            onPressed: () {
+                              answerQuestion(i);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: (phase == Phase.showingAnswer)
+                                  ? (i == question!.correctAnswer)
+                                      ? Colors.green
+                                      : Colors.red
+                                  : null,
                             ),
-                        ],
-                      ),
-              )
-            ],
-          ),
+                            child: Text(question!.answers[i]),
+                          ),
+                      ],
+                    ),
+            )
+          ],
         ),
       ),
     );
