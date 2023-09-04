@@ -115,6 +115,7 @@ class _QuizState extends State<Quiz> {
                               answerQuestion(i);
                             },
                             style: ElevatedButton.styleFrom(
+                              maximumSize: const Size(300, 50),
                               backgroundColor: (phase == Phase.showingAnswer)
                                   ? (i == question!.correctAnswer)
                                       ? Colors.green
